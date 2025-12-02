@@ -12,16 +12,10 @@ An intelligent, autonomous security vulnerability detection system for Java appl
 ### Installation
 
 ```bash
-# Install from source
-git clone <repository-url>
-cd java_security_detector
-python -m pip install -e .
-
-# Or install from PyPI (when published)
-python -m pip install brainary-java-security
+pip install -r requirements.txt
 ```
 
-**Note:** On macOS with conda, always use `python -m pip` instead of just `pip` to ensure installation in the correct environment. See [INSTALL.md](INSTALL.md) for detailed installation instructions.
+**Note:** On macOS with conda, always use `python -m pip` instead of just `pip` to ensure installation in the correct environment. 
 
 ### Basic Usage
 
@@ -37,28 +31,6 @@ print(result["summary"])
 
 # Export report
 detector.export_report("security_report.txt")
-```
-
-### Command Line Interface
-
-```bash
-# Quick scan
-java-security-scan /path/to/java/project
-
-# Thorough scan with validation
-java-security-scan /path/to/project --thorough
-
-# Focus on specific vulnerabilities
-java-security-scan /path/to/project --focus injection xss
-
-# Export report
-java-security-scan /path/to/project --output report.txt --format json
-
-# List all vulnerability patterns
-java-security-scan --list-patterns
-
-# Get info about a specific vulnerability
-java-security-scan --pattern-info CWE-89
 ```
 
 ## ✨ Key Features
@@ -286,117 +258,6 @@ The demo includes:
 - Python 3.8+
 - Brainary SDK (`python -m pip install brainary`)
 - (Optional) CodeQL CLI for advanced static analysis
-
-## 🚀 Development
-
-### Setup Development Environment
-
-```bash
-# Clone repository
-git clone <repository-url>
-cd java_security_detector
-
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install in development mode
-python -m pip install -e ".[dev]"
-
-# Run demo
-python examples/demo.py
-```
-
-### Running Tests
-
-```bash
-pytest tests/ -v
-```
-
-### Code Quality
-
-```bash
-# Format code
-black java_security_detector/
-
-# Lint
-flake8 java_security_detector/
-
-# Type checking
-mypy java_security_detector/
-```
-
-## 🤝 Integration
-
-### CI/CD Pipeline
-
-```yaml
-# .github/workflows/security.yml
-- name: Security Scan
-  run: |
-    python -m pip install brainary-java-security
-    java-security-scan src/ --output report.json --format json
-    # Fail if critical vulnerabilities found
-    if [ $(jq '.statistics.critical' report.json) -gt 0 ]; then
-      exit 1
-    fi
-```
-
-### Pre-commit Hook
-
-```bash
-#!/bin/bash
-# .git/hooks/pre-commit
-java-security-scan . --quick --no-validation
-```
-
-## 📚 Documentation
-
-- [Full Documentation](README_FULL.md)
-- [API Reference](docs/API.md)
-- [Examples](examples/)
-- [Knowledge Base](docs/KNOWLEDGE_BASE.md)
-
-## 🎯 Use Cases
-
-- **Security Audits**: Thorough vulnerability assessment
-- **Code Reviews**: Automated security checks
-- **CI/CD Integration**: Continuous security testing
-- **Developer Training**: Learn secure coding practices
-- **Compliance**: OWASP Top 10 coverage
-
-## 🔬 How It Works
-
-1. **Scanning**: Pattern matching and static analysis find potential issues
-2. **Analysis**: LLM analyzes code for deep understanding of vulnerabilities
-3. **Validation**: Multi-perspective checking eliminates false positives
-4. **Reporting**: Generate detailed reports with remediation guidance
-
-## 🌟 Advantages
-
-- **Context-Aware**: Understands business logic and intent
-- **Low False Positives**: Intelligent validation reduces noise
-- **Actionable**: Provides specific fixes, not just warnings
-- **Extensible**: Add custom patterns and rules
-- **Autonomous**: Requires minimal configuration
-
-## 📄 License
-
-MIT License - see LICENSE file for details
-
-## 🙏 Acknowledgments
-
-Built with:
-- **Brainary SDK**: Cognitive architecture framework
-- **CodeQL**: Static analysis engine (optional)
-- **OWASP**: Vulnerability classification
-- **CWE**: Weakness enumeration
-
-## 📞 Support
-
-- Issues: [GitHub Issues](https://github.com/cs-wangchong/Brainary/issues)
-- Documentation: [Full Docs](README_FULL.md)
-- Examples: [examples/](examples/)
 
 ---
 

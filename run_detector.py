@@ -87,7 +87,7 @@ def main():
     logger.info("Importing java_security_detector module")
     
     try:
-        from java_security_detector.new_detector import JavaSecurityDetector, DetectionConfig
+        from java_security_detector.detector import JavaSecurityDetector, DetectionConfig
         logger.info("✓ JavaSecurityDetector imported successfully")
         print("✅ Detector loaded successfully")
     except ImportError as e:

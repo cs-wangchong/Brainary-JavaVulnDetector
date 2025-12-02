@@ -1,7 +1,8 @@
 """
-Java Security Vulnerability Detector
+Java Security Vulnerability Detector (Redesigned)
 
-Main detector class orchestrating multi-agent vulnerability detection.
+Simplified detector using TemplateAgent-based SecurityDetectorAgent.
+This replaces the old multi-agent architecture with a single intelligent agent.
 """
 
 from typing import Any, Dict, List, Optional
@@ -10,19 +11,14 @@ from dataclasses import dataclass
 import json
 import logging
 
-from brainary.core.context import ExecutionContext
-from brainary.core.kernel import CognitiveKernel
-
-from .agents import ScannerAgent, AnalyzerAgent, ValidatorAgent, ReporterAgent
-from .knowledge import VulnerabilityKnowledgeBase
-from .tools import SecurityScanner
+from .security_agent import SecurityDetectorAgent
 
 logger = logging.getLogger(__name__)
 
 
 @dataclass
 class DetectionConfig:
-    """Configuration for detection process"""
+    """Configuration for detection process."""
     deep_analysis: bool = True
     validate_findings: bool = True
     generate_remediation: bool = True
@@ -33,42 +29,39 @@ class DetectionConfig:
 
 class JavaSecurityDetector:
     """
-    Intelligent Java vulnerability detector.
+    Intelligent Java vulnerability detector (redesigned).
     
-    Uses multi-agent architecture powered by Brainary SDK to detect,
-    analyze, validate, and report Java security vulnerabilities.
+    Now uses single SecurityDetectorAgent (TemplateAgent subclass) with:
+    - Custom security primitives
+    - Semantic memory with OWASP/CWE knowledge
+    - Metacognitive rules for quality assurance
+    - Comprehensive detection pipeline in process() method
     
-    Features:
-    - Multi-agent detection pipeline
-    - LLM-powered analysis
-    - CodeQL integration
-    - Knowledge base of OWASP/CWE patterns
-    - Automated remediation recommendations
+    Usage:
+        detector = JavaSecurityDetector()
+        result = detector.detect("/path/to/java/project")
+        
+        # Access findings
+        findings = result['findings']
+        summary = result['summary']
+        
+        # View statistics
+        stats = detector.get_stats()
     """
     
-    def __init__(self, kernel: Optional[CognitiveKernel] = None,
-                 config: Optional[DetectionConfig] = None):
+    def __init__(self, config: Optional[DetectionConfig] = None):
         """
         Initialize detector.
         
         Args:
-            kernel: CognitiveKernel instance (creates new if not provided)
             config: Detection configuration
         """
-        self.kernel = kernel or CognitiveKernel()
         self.config = config or DetectionConfig()
         
-        # Initialize agents with kernel for intelligent orchestration
-        self.scanner_agent = ScannerAgent(kernel=self.kernel)
-        self.analyzer_agent = AnalyzerAgent(kernel=self.kernel)
-        self.validator_agent = ValidatorAgent(kernel=self.kernel)
-        self.reporter_agent = ReporterAgent(kernel=self.kernel)
+        # Create single security detector agent
+        self.agent = SecurityDetectorAgent(name="JavaSecurityDetector")
         
-        # Initialize knowledge base
-        self.kb = VulnerabilityKnowledgeBase()
-        
-        # Detection state
-        self.last_detection_result = None
+        logger.info("JavaSecurityDetector initialized with SecurityDetectorAgent")
     
     def detect(self, target: str, config: Optional[DetectionConfig] = None) -> Dict[str, Any]:
         """
@@ -79,294 +72,304 @@ class JavaSecurityDetector:
             config: Optional detection configuration (overrides default)
         
         Returns:
-            Dictionary with complete detection results
+            Dictionary with complete detection results:
+            {
+                "target": str,
+                "findings": List[Dict],
+                "findings_count": int,
+                "summary": str,
+                "statistics": Dict,
+                "processing_time_ms": int,
+                "success": bool
+            }
         """
         config = config or self.config
         
-        # Create execution context
-        context = ExecutionContext(program_name="java_security_detection")
-        logger.info(f"Starting detection for {target}")
+        logger.info(f"Starting detection for: {target}")
         
-        # Phase 1: Scan
-        scan_result = self._scan_phase(context, target, config)
-        if not scan_result["success"]:
-            return scan_result
+        # Validate target
+        target_path = Path(target)
+        if not target_path.exists():
+            return {
+                "success": False,
+                "error": f"Target not found: {target}",
+                "findings": [],
+                "findings_count": 0
+            }
         
-        findings = scan_result.get("findings", [])
-        logger.info(f"Scan phase complete: {len(findings)} findings")
+        # Run agent detection pipeline
+        result = self.agent.run(
+            target,
+            deep_analysis=config.deep_analysis,
+            validate=config.validate_findings,
+            remediate=config.generate_remediation,
+            max_findings=config.max_findings
+        )
         
-        # Phase 2: Analyze
-        if config.deep_analysis and findings:
-            logger.info("Starting analysis phase")
-            analysis_result = self._analyze_phase(context, findings, config)
-            findings = analysis_result.get("findings", findings)
-            logger.info(f"Analysis phase complete")
+        if not result.success:
+            logger.error(f"Detection failed: {result.content.get('error_message', 'Unknown error')}")
+            return {
+                "success": False,
+                "error": result.content.get('error_message', 'Detection pipeline failed'),
+                "findings": [],
+                "findings_count": 0
+            }
         
-        # Phase 3: Validate
-        if config.validate_findings and findings:
-            logger.info("Starting validation phase")
-            validation_result = self._validate_phase(context, findings)
-            validated_findings = validation_result.get("validated_findings", [])
-            logger.info(f"Validation phase complete: {len(validated_findings)} confirmed")
-        else:
-            validated_findings = findings
-        
-        # Phase 4: Report
-        logger.info("Starting report generation phase")
-        report_result = self._report_phase(context, validated_findings)
-        
-        # Compile final result
-        final_result = {
+        # Extract results
+        detection_result = {
             "success": True,
-            "target": target,
-            "config": {
-                "deep_analysis": config.deep_analysis,
-                "validate_findings": config.validate_findings,
-                "generate_remediation": config.generate_remediation
-            },
-            "statistics": {
-                "total_findings": len(findings),
-                "validated_findings": len(validated_findings),
-                "false_positives": len(findings) - len(validated_findings) if config.validate_findings else 0
-            },
-            "findings": validated_findings,
-            "report": report_result.get("report", ""),
-            "summary": report_result.get("summary", ""),
-            "context": context
+            "target": result.content.get('target', target),
+            "findings": result.content.get('findings', []),
+            "findings_count": result.content.get('findings_count', 0),
+            "summary": result.content.get('summary', ''),
+            "statistics": result.content.get('statistics', {}),
+            "processing_time_ms": result.content.get('processing_time_ms', 0)
         }
         
-        self.last_detection_result = final_result
-        return final_result
-    
-    def _scan_phase(self, context: ExecutionContext, target: str,
-                    config: DetectionConfig) -> Dict[str, Any]:
-        """Execute scanning phase"""
-        logger.info("Phase 1: Scanning")
+        logger.info(f"Detection complete: {detection_result['findings_count']} findings")
         
-        scan_options = {
-            "deep_analysis": config.deep_analysis
+        return detection_result
+    
+    def detect_file(self, file_path: str, **kwargs) -> Dict[str, Any]:
+        """
+        Detect vulnerabilities in a single file.
+        
+        Args:
+            file_path: Path to Java file
+            **kwargs: Additional detection options
+        
+        Returns:
+            Detection result dictionary
+        """
+        return self.detect(file_path, **kwargs)
+    
+    def detect_directory(self, dir_path: str, **kwargs) -> Dict[str, Any]:
+        """
+        Detect vulnerabilities in all Java files in a directory.
+        
+        Args:
+            dir_path: Path to directory
+            **kwargs: Additional detection options
+        
+        Returns:
+            Detection result dictionary
+        """
+        return self.detect(dir_path, **kwargs)
+    
+    def get_stats(self) -> Dict[str, Any]:
+        """
+        Get detection statistics.
+        
+        Returns:
+            Statistics dictionary with:
+            - total_scans: Number of detection runs
+            - total_findings: Total vulnerabilities found
+            - validated_findings: Findings that passed validation
+            - false_positives_filtered: False positives removed
+            - remediations_generated: Fixes recommended
+            - agent_stats: Agent-level statistics
+        """
+        return self.agent.get_detection_stats()
+    
+    def get_memory_summary(self) -> Dict[str, Any]:
+        """
+        Get summary of what the agent has learned.
+        
+        Returns:
+            Memory summary with episodic and semantic knowledge
+        """
+        # Get recent detections from episodic memory (stored as ConceptualKnowledge)
+        from brainary.memory.semantic import KnowledgeType
+        recent_detections = self.agent.semantic_memory.search(
+            query="detection episode",
+            knowledge_types=[KnowledgeType.CONCEPTUAL],
+            top_k=5
+        )
+        
+        # Get knowledge stats
+        semantic_knowledge = self.agent.semantic_memory.search(
+            query="vulnerability",
+            knowledge_types=[KnowledgeType.FACTUAL],
+            top_k=10
+        )
+        
+        procedural_knowledge = self.agent.semantic_memory.search(
+            query="remediation",
+            knowledge_types=[KnowledgeType.PROCEDURAL],
+            top_k=5
+        )
+        
+        # Extract detection summaries from ConceptualKnowledge entries
+        detection_summaries = []
+        for item in recent_detections:
+            # ConceptualKnowledge has description and metadata, not content
+            summary = {
+                "description": item.description,
+                "key_concepts": item.key_concepts,
+                "metadata": item.metadata
+            }
+            detection_summaries.append(summary)
+        
+        # Count working memory items across all tiers
+        l1_count = len(self.agent.working_memory._l1_items)
+        l2_count = len(self.agent.working_memory._l2_items)
+        l3_count = len(self.agent.working_memory._l3_items)
+        total_working = l1_count + l2_count + l3_count
+        
+        return {
+            "recent_detections": detection_summaries,
+            "semantic_knowledge_count": len(semantic_knowledge),
+            "procedural_knowledge_count": len(procedural_knowledge),
+            "working_memory_items": total_working
         }
-        
-        try:
-            result = self.scanner_agent.execute(target, scan_options)
-            return result
-        except Exception as e:
-            logger.error(f"Scan phase error: {e}", exc_info=True)
-            return {"success": False, "error": str(e)}
     
-    def _analyze_phase(self, context: ExecutionContext, findings: List[Dict],
-                      config: DetectionConfig) -> Dict[str, Any]:
-        """Execute analysis phase"""
-        logger.info("Phase 2: Deep Analysis")
-        
-        # Limit findings if configured
-        if config.max_findings:
-            logger.info(f"Limiting findings to {config.max_findings}")
-            findings = findings[:config.max_findings]
-        
-        try:
-            result = self.analyzer_agent.execute(
-                context,
-                findings,
-                focus_areas=config.focus_areas
-            )
-            return result
-        except Exception as e:
-            logger.error(f"Analysis phase error: {e}", exc_info=True)
-            return {"success": False, "error": str(e), "findings": findings}
-    
-    def _validate_phase(self, context: ExecutionContext,
-                       findings: List[Dict]) -> Dict[str, Any]:
-        """Execute validation phase"""
-        logger.info("Phase 3: Validation")
-        
-        try:
-            result = self.validator_agent.execute(context, findings)
-            return result
-        except Exception as e:
-            logger.error(f"Validation phase error: {e}", exc_info=True)
-            return {
-                "success": False,
-                "error": str(e),
-                "validated_findings": findings
-            }
-    
-    def _report_phase(self, context: ExecutionContext,
-                     findings: List[Dict]) -> Dict[str, Any]:
-        """Execute reporting phase"""
-        logger.info("Phase 4: Reporting")
-        
-        try:
-            result = self.reporter_agent.execute(context, findings)
-            return result
-        except Exception as e:
-            logger.error(f"Reporting phase error: {e}", exc_info=True)
-            return {
-                "success": False,
-                "error": str(e),
-                "report": "Report generation failed",
-                "summary": str(e)
-            }
-    
-    def quick_scan(self, target: str) -> Dict[str, Any]:
+    def export_report(self, result: Dict[str, Any], output_file: str, 
+                     format: str = "json") -> None:
         """
-        Run quick scan without deep analysis or validation.
+        Export detection report to file.
         
         Args:
-            target: File or directory to scan
-        
-        Returns:
-            Dictionary with scan results
+            result: Detection result from detect()
+            output_file: Output file path
+            format: Report format ("json" or "md")
         """
-        quick_config = DetectionConfig(
-            deep_analysis=False,
-            validate_findings=False,
-            generate_remediation=False
-        )
+        output_path = Path(output_file)
         
-        return self.detect(target, quick_config)
-    
-    def thorough_scan(self, target: str, focus_areas: Optional[List[str]] = None) -> Dict[str, Any]:
-        """
-        Run thorough scan with all features enabled.
-        
-        Args:
-            target: File or directory to scan
-            focus_areas: Optional vulnerability types to focus on
-        
-        Returns:
-            Dictionary with complete results
-        """
-        thorough_config = DetectionConfig(
-            deep_analysis=True,
-            validate_findings=True,
-            generate_remediation=True,
-            focus_areas=focus_areas
-        )
-        
-        return self.detect(target, thorough_config)
-    
-    def get_statistics(self) -> Dict[str, Any]:
-        """Get statistics from last detection"""
-        if not self.last_detection_result:
-            return {"error": "No detection has been run"}
-        
-        return self.last_detection_result.get("statistics", {})
-    
-    def export_report(self, output_path: str, format: str = "txt") -> bool:
-        """
-        Export last detection report.
-        
-        Args:
-            output_path: Path to save report
-            format: Format (txt, json, html)
-        
-        Returns:
-            True if successful
-        """
-        if not self.last_detection_result:
-            return False
-        
-        try:
-            if format == "json":
-                # Export as JSON
-                data = {
-                    "target": self.last_detection_result["target"],
-                    "statistics": self.last_detection_result["statistics"],
-                    "findings": self.last_detection_result["findings"],
-                    "summary": self.last_detection_result["summary"]
-                }
-                with open(output_path, 'w') as f:
-                    json.dump(data, f, indent=2)
+        if format == "json":
+            with open(output_path, 'w') as f:
+                json.dump(result, f, indent=2, default=str)
+            logger.info(f"JSON report exported to: {output_path}")
             
-            elif format == "txt":
-                # Export as text report
-                report = self.last_detection_result.get("report", "")
-                with open(output_path, 'w') as f:
-                    f.write(report)
+        elif format == "md":
+            markdown = self._generate_markdown_report(result)
+            with open(output_path, 'w') as f:
+                f.write(markdown)
+            logger.info(f"Markdown report exported to: {output_path}")
             
-            elif format == "html":
-                # Export as HTML
-                html = self._generate_html_report(self.last_detection_result)
-                with open(output_path, 'w') as f:
-                    f.write(html)
-            
-            else:
-                return False
-            
-            return True
+        else:
+            raise ValueError(f"Unsupported format: {format}")
+    
+    def _generate_markdown_report(self, result: Dict[str, Any]) -> str:
+        """Generate markdown report from detection result."""
+        findings = result.get('findings', [])
+        target = result.get('target', 'Unknown')
+        processing_time = result.get('processing_time_ms', 0)
         
-        except Exception as e:
-            return False
-    
-    def _generate_html_report(self, result: Dict[str, Any]) -> str:
-        """Generate HTML report"""
-        findings = result.get("findings", [])
-        stats = result.get("statistics", {})
+        # Count by severity
+        critical = len([f for f in findings if f.get('severity', '').lower() == 'critical'])
+        high = len([f for f in findings if f.get('severity', '').lower() == 'high'])
+        medium = len([f for f in findings if f.get('severity', '').lower() == 'medium'])
+        low = len([f for f in findings if f.get('severity', '').lower() == 'low'])
         
-        html = """
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Java Security Vulnerability Report</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 40px; }
-        h1 { color: #333; }
-        .summary { background: #f0f0f0; padding: 20px; margin: 20px 0; }
-        .finding { border: 1px solid #ddd; margin: 20px 0; padding: 20px; }
-        .critical { border-left: 5px solid #d32f2f; }
-        .high { border-left: 5px solid #f57c00; }
-        .medium { border-left: 5px solid #fbc02d; }
-        .low { border-left: 5px solid #388e3c; }
-        .code { background: #f5f5f5; padding: 10px; font-family: monospace; }
-    </style>
-</head>
-<body>
-    <h1>Java Security Vulnerability Report</h1>
-    
-    <div class="summary">
-        <h2>Summary</h2>
-        <p><strong>Target:</strong> {target}</p>
-        <p><strong>Total Findings:</strong> {total}</p>
-        <p><strong>Validated:</strong> {validated}</p>
-        <p><strong>False Positives:</strong> {fp}</p>
-    </div>
-    
-    <h2>Findings</h2>
-""".format(
-            target=result.get("target", "Unknown"),
-            total=stats.get("total_findings", 0),
-            validated=stats.get("validated_findings", 0),
-            fp=stats.get("false_positives", 0)
-        )
+        lines = [
+            "# Java Security Detection Report",
+            "",
+            f"**Target:** `{target}`",
+            f"**Generated:** {result.get('timestamp', 'N/A')}",
+            f"**Processing Time:** {processing_time}ms",
+            "",
+            "## Summary",
+            "",
+            f"- **Total Findings:** {len(findings)}",
+            f"- **Critical:** {critical}",
+            f"- **High:** {high}",
+            f"- **Medium:** {medium}",
+            f"- **Low:** {low}",
+            "",
+            "## Findings",
+            ""
+        ]
         
         for i, finding in enumerate(findings, 1):
-            severity = finding.get("severity", "medium")
-            cwe_id = finding.get("cwe_id", "UNKNOWN")
+            name = finding.get('name', 'Unknown')
+            severity = finding.get('severity', 'Unknown')
+            file_path = finding.get('file', 'unknown')
+            line_num = finding.get('line', '?')
+            description = finding.get('description', 'No description')
             
-            html += f"""
-    <div class="finding {severity}">
-        <h3>[{i}] {finding.get("name", "Unknown")} ({cwe_id})</h3>
-        <p><strong>Severity:</strong> {severity.upper()}</p>
-        <p><strong>Location:</strong> {finding.get("file", "unknown")} line {finding.get("line", 0)}</p>
-        <p><strong>Confidence:</strong> {finding.get("confidence", "medium").upper()}</p>
-    </div>
-"""
+            lines.extend([
+                f"### {i}. {name}",
+                "",
+                f"**Severity:** {severity}",
+                f"**Location:** `{file_path}:{line_num}`",
+                f"**CWE:** {finding.get('cwe_id', 'N/A')}",
+                "",
+                f"**Description:**",
+                description,
+                ""
+            ])
+            
+            # Add code snippet if available
+            code = finding.get('match', '') or finding.get('snippet', '')
+            if code:
+                lines.extend([
+                    "**Vulnerable Code:**",
+                    "```java",
+                    code,
+                    "```",
+                    ""
+                ])
+            
+            # Add remediation if available
+            remediation = finding.get('remediation', {})
+            if remediation:
+                lines.extend([
+                    "**Remediation:**",
+                    f"Priority: {remediation.get('priority', 'N/A')}",
+                    "",
+                    remediation.get('fix_summary', ''),
+                    ""
+                ])
+                
+                if remediation.get('secure_code_example'):
+                    lines.extend([
+                        "**Secure Code Example:**",
+                        "```java",
+                        remediation.get('secure_code_example', ''),
+                        "```",
+                        ""
+                    ])
+            
+            lines.append("---")
+            lines.append("")
         
-        html += """
-</body>
-</html>
-"""
-        return html
+        # Add statistics
+        stats = result.get('statistics', {})
+        if stats:
+            lines.extend([
+                "## Detection Statistics",
+                "",
+                f"- Total Scans: {stats.get('total_scans', 0)}",
+                f"- Total Findings: {stats.get('total_findings', 0)}",
+                f"- Validated Findings: {stats.get('validated_findings', 0)}",
+                f"- False Positives Filtered: {stats.get('false_positives_filtered', 0)}",
+                f"- Remediations Generated: {stats.get('remediations_generated', 0)}",
+                ""
+            ])
+        
+        return "\n".join(lines)
     
-    def get_knowledge_base(self) -> VulnerabilityKnowledgeBase:
-        """Get vulnerability knowledge base"""
-        return self.kb
+    def reset_stats(self) -> None:
+        """Reset detection statistics."""
+        self.agent.reset_stats()
+        logger.info("Detection statistics reset")
+
+
+# Convenience function for quick detection
+def detect_vulnerabilities(target: str, **kwargs) -> Dict[str, Any]:
+    """
+    Quick vulnerability detection function.
     
-    def list_vulnerability_patterns(self) -> str:
-        """List all available vulnerability patterns"""
-        return self.kb.get_all_patterns_summary()
+    Args:
+        target: File or directory to scan
+        **kwargs: Detection options
     
-    def get_pattern_guidance(self, cwe_id: str) -> str:
-        """Get detection guidance for a specific vulnerability"""
-        return self.kb.get_detection_guidance(cwe_id)
+    Returns:
+        Detection result dictionary
+    
+    Example:
+        result = detect_vulnerabilities("/path/to/project")
+        print(f"Found {result['findings_count']} vulnerabilities")
+    """
+    detector = JavaSecurityDetector()
+    return detector.detect(target, **kwargs)

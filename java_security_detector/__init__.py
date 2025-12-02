@@ -31,19 +31,14 @@ __version__ = '1.0.0'
 # For standalone use, import only knowledge and tools
 try:
     from .detector import JavaSecurityDetector, DetectionConfig
-    from .agents import (
-        ScannerAgent,
-        AnalyzerAgent,
-        ValidatorAgent,
-        ReporterAgent,
-        SecurityFinding
-    )
-    from .primitives import (
-        AnalyzeCodePrimitive,
-        DetectVulnerabilityPrimitive,
-        ThinkSecurityPrimitive,
+    from .security_primitives import (
+        ScanCodePrimitive,
+        AnalyzeVulnerabilityPrimitive,
         ValidateFindingPrimitive,
-        RecommendFixPrimitive
+        RecommendFixPrimitive,
+        ThinkSecurityPrimitive,
+        AnalyzeCodePrimitive,
+        DetectVulnerabilityPrimitive
     )
     _FULL_FEATURES = True
 except ImportError:
@@ -166,13 +161,6 @@ def register_security_primitives():
     print(f"Registered {len(primitive_defs)} security primitives with Brainary (catalog + router + registry)")
 
 
-# These work standalone
-from .knowledge import (
-    VulnerabilityKnowledgeBase,
-    VulnerabilityPattern,
-    VulnerabilitySeverity,
-    VulnerabilityCategory
-)
 from .tools import (
     CodeQLTool,
     PatternMatcher,
@@ -195,6 +183,8 @@ __all__ = [
     'SecurityFinding',
     
     # Primitives
+    'ScanCodePrimitive',
+    'AnalyzeVulnerabilityPrimitive',
     'AnalyzeCodePrimitive',
     'DetectVulnerabilityPrimitive',
     'ThinkSecurityPrimitive',
