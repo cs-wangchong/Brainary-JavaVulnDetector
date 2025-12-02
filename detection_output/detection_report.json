@@ -1,0 +1,196 @@
+{
+  "success": true,
+  "target": "/Users/chongwang/Workspace/CodeHub/Brainary-Projects/Brainary-JavaVulnDetector/test_project/src/main/java",
+  "findings": [
+    {
+      "pattern": "CWE-611_DocumentBuilderFacto",
+      "description": "XML External Entity (XXE): XML parser configured to process external entities",
+      "file": "/Users/chongwang/Workspace/CodeHub/Brainary-Projects/Brainary-JavaVulnDetector/test_project/src/main/java/com/example/vulnerable/XmlProcessor.java",
+      "line": 22,
+      "match": "DocumentBuilderFactory.newInstance()",
+      "context": "    public Document parseXml(String xmlContent) {\n        try {\n            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();\n            \n            // XXE vulnerability - external entities not disabled",
+      "validated": false
+    },
+    {
+      "pattern": "CWE-611_DocumentBuilderFacto",
+      "description": "XML External Entity (XXE): XML parser configured to process external entities",
+      "file": "/Users/chongwang/Workspace/CodeHub/Brainary-Projects/Brainary-JavaVulnDetector/test_project/src/main/java/com/example/vulnerable/XmlProcessor.java",
+      "line": 43,
+      "match": "DocumentBuilderFactory.newInstance()",
+      "context": "     */\n    public Document parseXmlFile(File xmlFile) throws Exception {\n        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();\n        \n        // Missing security configuration",
+      "validated": false
+    },
+    {
+      "pattern": "CWE-611_SAXParserFactory\\.ne",
+      "description": "XML External Entity (XXE): XML parser configured to process external entities",
+      "file": "/Users/chongwang/Workspace/CodeHub/Brainary-Projects/Brainary-JavaVulnDetector/test_project/src/main/java/com/example/vulnerable/XmlProcessor.java",
+      "line": 55,
+      "match": "SAXParserFactory.newInstance()",
+      "context": "    public void parseSax(String xmlContent) {\n        try {\n            SAXParserFactory factory = SAXParserFactory.newInstance();\n            \n            // XXE vulnerability in SAX parser",
+      "validated": false
+    },
+    {
+      "pattern": "CWE-611_TransformerFactory\\.",
+      "description": "XML External Entity (XXE): XML parser configured to process external entities",
+      "file": "/Users/chongwang/Workspace/CodeHub/Brainary-Projects/Brainary-JavaVulnDetector/test_project/src/main/java/com/example/vulnerable/XmlProcessor.java",
+      "line": 81,
+      "match": "TransformerFactory.newInstance()",
+      "context": "    public String transformXml(String xmlContent, String xsltContent) {\n        try {\n            TransformerFactory factory = TransformerFactory.newInstance();\n            \n            // XXE in XSLT transformation",
+      "validated": false
+    },
+    {
+      "pattern": "CWE-772_new FileInputStream\\",
+      "description": "Resource Leak: Resources not properly closed, causing memory/resource leaks",
+      "file": "/Users/chongwang/Workspace/CodeHub/Brainary-Projects/Brainary-JavaVulnDetector/test_project/src/main/java/com/example/vulnerable/DataProcessor.java",
+      "line": 36,
+      "match": "new FileInputStream(filename)",
+      "context": "     */\n    public Object loadFromFile(String filename) throws Exception {\n        FileInputStream fis = new FileInputStream(filename);\n        ObjectInputStream ois = new ObjectInputStream(fis);\n        ",
+      "validated": false
+    },
+    {
+      "pattern": "CWE-772_new BufferedReader\\(",
+      "description": "Resource Leak: Resources not properly closed, causing memory/resource leaks",
+      "file": "/Users/chongwang/Workspace/CodeHub/Brainary-Projects/Brainary-JavaVulnDetector/test_project/src/main/java/com/example/vulnerable/DataProcessor.java",
+      "line": 57,
+      "match": "new BufferedReader(\n                new InputStreamReader(process.getInputStream()",
+      "context": "            Process process = Runtime.getRuntime().exec(command);\n            \n            BufferedReader reader = new BufferedReader(\n                new InputStreamReader(process.getInputStream())\n            );",
+      "validated": false
+    },
+    {
+      "pattern": "CWE-79_\\.write\\([^)]*\\+",
+      "description": "Cross-Site Scripting (XSS): Untrusted data rendered in HTML without proper encoding",
+      "file": "/Users/chongwang/Workspace/CodeHub/Brainary-Projects/Brainary-JavaVulnDetector/test_project/src/main/java/com/example/vulnerable/SessionManager.java",
+      "line": 54,
+      "match": ".write(\"User \" + userId +",
+      "context": "        \n        // Directly delete user without verifying permissions\n        response.getWriter().write(\"User \" + userId + \" deleted\");\n    }\n    ",
+      "validated": false
+    },
+    {
+      "pattern": "CWE-362_if\\s*\\([^)]*!=\\s*nul",
+      "description": "Race Condition: Concurrent access to shared resources without proper synchronization",
+      "file": "/Users/chongwang/Workspace/CodeHub/Brainary-Projects/Brainary-JavaVulnDetector/test_project/src/main/java/com/example/vulnerable/SessionManager.java",
+      "line": 24,
+      "match": "if (username != null && password != null) {\n            HttpSession session = request.getSession(true);\n            session.setAttribute(\"username\", username);\n            session.setAttribute(\"password\", password); // Storing password in session!\n            \n            // Set insecure cookie without HttpOnly and Secure flags\n            Cookie cookie = new Cookie(\"sessionId\", session.getId());\n            cookie.setMaxAge(3600);\n            // Missing: cookie.setHttpOnly(true);\n            // Missing: cookie.setSecure(true);\n            response.addCookie(cookie);\n            \n            // Store sensitive data in cookie\n            Cookie userCookie = new Cookie(\"userdata\", username + \":\" + password);\n            response.addCookie(userCookie);\n            \n            response.getWriter().write(",
+      "context": "        \n        // Weak authentication - no password hashing comparison\n        if (username != null && password != null) {\n            HttpSession session = request.getSession(true);\n            session.setAttribute(\"username\", username);",
+      "validated": false
+    },
+    {
+      "pattern": "CWE-362_if\\s*\\([^)]*!=\\s*nul",
+      "description": "Race Condition: Concurrent access to shared resources without proper synchronization",
+      "file": "/Users/chongwang/Workspace/CodeHub/Brainary-Projects/Brainary-JavaVulnDetector/test_project/src/main/java/com/example/vulnerable/SessionManager.java",
+      "line": 68,
+      "match": "if (session != null) {\n            session.setAttribute(\"password\", newPassword);\n            response.getWriter().write(",
+      "context": "        // No verification of current password\n        // No password strength check\n        if (session != null) {\n            session.setAttribute(\"password\", newPassword);\n            response.getWriter().write(\"Password changed\");",
+      "validated": false
+    },
+    {
+      "pattern": "CWE-362_if\\s*\\([^)]*!=\\s*nul",
+      "description": "Race Condition: Concurrent access to shared resources without proper synchronization",
+      "file": "/Users/chongwang/Workspace/CodeHub/Brainary-Projects/Brainary-JavaVulnDetector/test_project/src/main/java/com/example/vulnerable/SessionManager.java",
+      "line": 97,
+      "match": "if (session != null) {\n            // Should invalidate old session and create new one\n            session.setAttribute(\"authenticated\", true);\n            session.setAttribute(",
+      "context": "        // Reusing existing session instead of creating new one\n        HttpSession session = request.getSession(false);\n        if (session != null) {\n            // Should invalidate old session and create new one\n            session.setAttribute(\"authenticated\", true);",
+      "validated": false
+    },
+    {
+      "pattern": "CWE-79_\\.write\\([^)]*\\+",
+      "description": "Cross-Site Scripting (XSS): Untrusted data rendered in HTML without proper encoding",
+      "file": "/Users/chongwang/Workspace/CodeHub/Brainary-Projects/Brainary-JavaVulnDetector/test_project/src/main/java/com/example/vulnerable/FileUploadServlet.java",
+      "line": 50,
+      "match": ".write(\"File uploaded successfully: \" +",
+      "context": "            // XSS vulnerability in response\n            response.getWriter().write(\"<html><body>\");\n            response.getWriter().write(\"File uploaded successfully: \" + filename);\n            response.getWriter().write(\"</body></html>\");\n            ",
+      "validated": false
+    },
+    {
+      "pattern": "CWE-79_\\.write\\([^)]*\\+",
+      "description": "Cross-Site Scripting (XSS): Untrusted data rendered in HTML without proper encoding",
+      "file": "/Users/chongwang/Workspace/CodeHub/Brainary-Projects/Brainary-JavaVulnDetector/test_project/src/main/java/com/example/vulnerable/FileUploadServlet.java",
+      "line": 54,
+      "match": ".write(\"Upload failed: \" +",
+      "context": "            \n        } catch (Exception e) {\n            response.getWriter().write(\"Upload failed: \" + e.getMessage());\n        }\n    }",
+      "validated": false
+    },
+    {
+      "pattern": "CWE-79_\\.write\\([^)]*\\+",
+      "description": "Cross-Site Scripting (XSS): Untrusted data rendered in HTML without proper encoding",
+      "file": "/Users/chongwang/Workspace/CodeHub/Brainary-Projects/Brainary-JavaVulnDetector/test_project/src/main/java/com/example/vulnerable/FileUploadServlet.java",
+      "line": 86,
+      "match": ".write(\"File not found: \" +",
+      "context": "            out.close();\n        } else {\n            response.getWriter().write(\"File not found: \" + filename);\n        }\n    }",
+      "validated": false
+    },
+    {
+      "pattern": "CWE-772_new FileInputStream\\",
+      "description": "Resource Leak: Resources not properly closed, causing memory/resource leaks",
+      "file": "/Users/chongwang/Workspace/CodeHub/Brainary-Projects/Brainary-JavaVulnDetector/test_project/src/main/java/com/example/vulnerable/FileUploadServlet.java",
+      "line": 74,
+      "match": "new FileInputStream(file)",
+      "context": "            response.setHeader(\"Content-Disposition\", \"attachment; filename=\\\"\" + filename + \"\\\"\");\n            \n            FileInputStream fileIn = new FileInputStream(file);\n            OutputStream out = response.getOutputStream();\n            ",
+      "validated": false
+    },
+    {
+      "pattern": "CWE-330_new Random\\(",
+      "description": "Weak Random Number Generation: Use of predictable random number generators for security purposes",
+      "file": "/Users/chongwang/Workspace/CodeHub/Brainary-Projects/Brainary-JavaVulnDetector/test_project/src/main/java/com/example/vulnerable/CryptoManager.java",
+      "line": 81,
+      "match": "new Random(",
+      "context": "    public int generateToken() {\n        // Using insecure Random instead of SecureRandom\n        Random random = new Random();\n        return random.nextInt(1000000);\n    }",
+      "validated": false
+    },
+    {
+      "pattern": "CWE-89_\"SELECT.*\"\\s*\\+",
+      "description": "SQL Injection: Untrusted data concatenated into SQL queries without proper sanitization",
+      "file": "/Users/chongwang/Workspace/CodeHub/Brainary-Projects/Brainary-JavaVulnDetector/test_project/src/main/java/com/example/vulnerable/UserController.java",
+      "line": 31,
+      "match": "\"SELECT * FROM users WHERE username='\" +",
+      "context": "            \n            // SQL Injection vulnerability - user input directly concatenated\n            String query = \"SELECT * FROM users WHERE username='\" + username + \n                          \"' AND password='\" + password + \"'\";\n            ",
+      "validated": false
+    },
+    {
+      "pattern": "CWE-89_\"SELECT.*\"\\s*\\+",
+      "description": "SQL Injection: Untrusted data concatenated into SQL queries without proper sanitization",
+      "file": "/Users/chongwang/Workspace/CodeHub/Brainary-Projects/Brainary-JavaVulnDetector/test_project/src/main/java/com/example/vulnerable/UserController.java",
+      "line": 67,
+      "match": "\"SELECT * FROM users WHERE name LIKE '%\" +",
+      "context": "            \n            // Another SQL injection point\n            String query = \"SELECT * FROM users WHERE name LIKE '%\" + searchTerm + \"%'\";\n            ResultSet rs = stmt.executeQuery(query);\n            ",
+      "validated": false
+    },
+    {
+      "pattern": "CWE-79_\\.write\\([^)]*\\+",
+      "description": "Cross-Site Scripting (XSS): Untrusted data rendered in HTML without proper encoding",
+      "file": "/Users/chongwang/Workspace/CodeHub/Brainary-Projects/Brainary-JavaVulnDetector/test_project/src/main/java/com/example/vulnerable/UserController.java",
+      "line": 39,
+      "match": ".write(\"<h1>Welcome \" + username +",
+      "context": "                // XSS vulnerability - reflecting user input without sanitization\n                response.getWriter().write(\"<html><body>\");\n                response.getWriter().write(\"<h1>Welcome \" + username + \"!</h1>\");\n                response.getWriter().write(\"</body></html>\");\n            } else {",
+      "validated": false
+    },
+    {
+      "pattern": "CWE-79_\\.write\\([^)]*\\+",
+      "description": "Cross-Site Scripting (XSS): Untrusted data rendered in HTML without proper encoding",
+      "file": "/Users/chongwang/Workspace/CodeHub/Brainary-Projects/Brainary-JavaVulnDetector/test_project/src/main/java/com/example/vulnerable/UserController.java",
+      "line": 42,
+      "match": ".write(\"Login failed for user: \" +",
+      "context": "                response.getWriter().write(\"</body></html>\");\n            } else {\n                response.getWriter().write(\"Login failed for user: \" + username);\n            }\n            ",
+      "validated": false
+    },
+    {
+      "pattern": "CWE-79_\\.write\\([^)]*\\+",
+      "description": "Cross-Site Scripting (XSS): Untrusted data rendered in HTML without proper encoding",
+      "file": "/Users/chongwang/Workspace/CodeHub/Brainary-Projects/Brainary-JavaVulnDetector/test_project/src/main/java/com/example/vulnerable/UserController.java",
+      "line": 51,
+      "match": ".write(\"Database error: \" +",
+      "context": "        } catch (SQLException e) {\n            // Information exposure through error messages\n            response.getWriter().write(\"Database error: \" + e.getMessage());\n            e.printStackTrace(); // Logging sensitive information\n        }",
+      "validated": false
+    }
+  ],
+  "findings_count": 20,
+  "summary": "Security Detection Report for: /Users/chongwang/Workspace/CodeHub/Brainary-Projects/Brainary-JavaVulnDetector/test_project/src/main/java\n\nTotal Findings: 20\n  \u2022 Critical: 0\n  \u2022 High: 0\n  \u2022 Medium: 0\n  \u2022 Low: 0\n\nValidated: 0/20\nWith Remediation: 0/20\n\nProcessing Time: 123ms\n\nTop Vulnerabilities:\n  1. [Unknown] Unknown at /Users/chongwang/Workspace/CodeHub/Brainary-Projects/Brainary-JavaVulnDetector/test_project/src/main/java/com/example/vulnerable/XmlProcessor.java:22\n  2. [Unknown] Unknown at /Users/chongwang/Workspace/CodeHub/Brainary-Projects/Brainary-JavaVulnDetector/test_project/src/main/java/com/example/vulnerable/XmlProcessor.java:43\n  3. [Unknown] Unknown at /Users/chongwang/Workspace/CodeHub/Brainary-Projects/Brainary-JavaVulnDetector/test_project/src/main/java/com/example/vulnerable/XmlProcessor.java:55\n  4. [Unknown] Unknown at /Users/chongwang/Workspace/CodeHub/Brainary-Projects/Brainary-JavaVulnDetector/test_project/src/main/java/com/example/vulnerable/XmlProcessor.java:81\n  5. [Unknown] Unknown at /Users/chongwang/Workspace/CodeHub/Brainary-Projects/Brainary-JavaVulnDetector/test_project/src/main/java/com/example/vulnerable/DataProcessor.java:36",
+  "statistics": {
+    "total_scans": 1,
+    "total_findings": 20,
+    "validated_findings": 0,
+    "false_positives_filtered": 0,
+    "remediations_generated": 0
+  },
+  "processing_time_ms": 123
+}
