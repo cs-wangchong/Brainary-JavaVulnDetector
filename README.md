@@ -17,6 +17,12 @@ pip install -r requirements.txt
 
 **Note:** On macOS with conda, always use `python -m pip` instead of just `pip` to ensure installation in the correct environment. 
 
+Export your LLM API key:
+
+```bash
+export OPENAI_API_KEY="sk-..."
+```
+
 ### Basic Usage
 
 ```python
@@ -234,30 +240,6 @@ DetectionConfig(
     "summary": "... executive summary ..."
 }
 ```
-
-## 🧪 Examples
-
-Run the comprehensive demo:
-
-```bash
-cd examples
-python demo.py
-```
-
-The demo includes:
-1. Knowledge base exploration
-2. Quick scan demonstration
-3. Thorough scan configuration
-4. Multiple vulnerability detection
-5. Pattern matching examples
-6. Agent architecture overview
-7. Knowledge base search
-
-## 📋 Requirements
-
-- Python 3.8+
-- Brainary SDK (`python -m pip install brainary`)
-- (Optional) CodeQL CLI for advanced static analysis
 
 ---
 
